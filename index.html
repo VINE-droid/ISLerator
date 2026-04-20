@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SilentBridge — ISL Converter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@300;400;500&display=swap"
+        rel="stylesheet" />
+
+    <style>
+        /* ─── CSS Variables ─── */
+        :root {
+            --bg-base: #0d0f14;
+            --bg-surface: #13161d;
+            --bg-card: #191d26;
+            --bg-input: #1e222d;
+            --bg-hover: #242836;
+            --border: #2a2f3f;
+            --border-focus: #00c896;
+            --accent: #00c896;
+            --accent-dim: rgba(0, 200, 150, 0.12);
+            --accent-glow: rgba(0, 200, 150, 0.25);
+            --text-primary: #e8eaf0;
+            --text-secondary: #8a90a4;
+            --text-muted: #555b6e;
+            --danger: #ff6b6b;
+            --warning: #f5a623;
+            --status-bg: rgba(0, 200, 150, 0.08);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-xl: 20px;
+            --font-head: 'Syne', sans-serif;
+            --font-body: 'DM Sans', sans-serif;
+            --font-mono: 'DM Mono', monospace;
+            --transition: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="light"] {
+            --bg-base: #f0f2f7;
+            --bg-surface: #f8f9fc;
+            --bg-card: #ffffff;
+            --bg-input: #f0f2f7;
+            --bg-hover: #e8eaf0;
+            --border: #dde0ea;
+            --border-focus: #00a87a;
+            --accent: #00a87a;
+            --accent-dim: rgba(0, 168, 122, 0.09);
+            --accent-glow: rgba(0, 168, 122, 0.2);
+            --text-primary: #1a1d27;
+            --text-secondary: #50566b;
+            --text-muted: #9097b0;
+            --status-bg: rgba(0, 168, 122, 0.07);
+        }
+
+        /* ─── Reset ─── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        /* ─── Scrollbar ─── */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        /* ─── Layout ─── */
+        .shell {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 0 20px 80px;
+        }
+
+        /* ─── Header ─── */
+        .header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 36px 0 32px;
+            gap: 16px;
+        }
+
+
+
+        .logo {
+            font-family: var(--font-head);
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+            flex-shrink: 0;
+            animation: pulse 2.4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 var(--accent-glow);
+            }
+
+            50% {
+                box-shadow: 0 0 0 7px transparent;
+            }
+        }
+
+        .tagline {
+            font-size: 13.5px;
+            color: var(--text-secondary);
+            margin-top: 5px;
+            letter-spacing: 0.2px;
+            font-weight: 300;
+        }
+
+        /* ─── Theme toggle ─── */
+        .theme-btn {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: 12.5px;
+            padding: 7px 13px;
+            cursor: pointer;
+            transition: all var(--transition);
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+
+        .theme-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border-color: var(--border-focus);
+        }
+
+        .theme-btn svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+
+        /* ─── Pipeline bar ─── */
+        .pipeline {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            margin-bottom: 28px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 14px 20px;
+            overflow: hidden;
+        }
+
+        .pipeline-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .pipeline-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all var(--transition);
+        }
+
+        .pipeline-icon.active {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+        }
+
+        .pipeline-label {
+            font-size: 10.5px;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-weight: 400;
+        }
+
+        .pipeline-arrow {
+            color: var(--border);
+            font-size: 18px;
+            padding: 0 6px;
+            margin-bottom: 18px;
+            font-family: var(--font-mono);
+            flex-shrink: 0;
+        }
+
+        /* ─── Cards ─── */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 22px 24px;
+            margin-bottom: 16px;
+            transition: border-color var(--transition);
+        }
+
+        .card-label {
+            font-size: 10.5px;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card-label .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        /* ─── Input group ─── */
+        .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .text-input {
+            flex: 1;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 15px;
+            padding: 11px 14px;
+            outline: none;
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+
+        .text-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .text-input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-family: var(--font-body);
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition);
+            white-space: nowrap;
+            padding: 11px 16px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.88;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active {
+            opacity: 1;
+            transform: none;
+        }
+
+        .btn-ghost {
+            background: var(--bg-input);
+            color: var(--text-secondary);
+        }
+
+        .btn-ghost:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border-color: var(--accent);
+        }
+
+        .btn-mic {
+            background: var(--bg-input);
+            border-color: var(--border);
+            color: var(--text-secondary);
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border-radius: var(--radius-md);
+            flex-shrink: 0;
+        }
+
+        .btn-mic:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .btn-mic.listening {
+            background: rgba(255, 80, 80, 0.12);
+            border-color: #ff5050;
+            color: #ff5050;
+            animation: mic-pulse 1.2s ease-in-out infinite;
+        }
+
+        @keyframes mic-pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 80, 80, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 0 6px transparent;
+            }
+        }
+
+        .btn-mic svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* ─── Sample buttons ─── */
+        .samples {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .sample-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: 12.5px;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .sample-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        /* ─── Status bar ─── */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--status-bg);
+            border: 1px solid var(--accent-glow);
+            border-radius: var(--radius-md);
+            padding: 10px 16px;
+            margin-top: 14px;
+            font-size: 13px;
+            color: var(--accent);
+            font-family: var(--font-mono);
+            font-weight: 400;
+            min-height: 40px;
+            transition: all var(--transition);
+            opacity: 0;
+        }
+
+        .status-bar.visible {
+            opacity: 1;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .status-dot.blink {
+            animation: blink 1s step-start infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .status-dot.error {
+            background: var(--danger);
+        }
+
+        .status-text.error {
+            color: var(--danger);
+        }
+
+        /* ─── ISL result panel ─── */
+        .result-panel {
+            display: none;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .result-panel.visible {
+            display: flex;
+        }
+
+        .isl-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 520px) {
+            .isl-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .isl-box {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+        }
+
+        .isl-box-label {
+            font-size: 10px;
+            letter-spacing: 0.7px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            margin-bottom: 8px;
+        }
+
+        .isl-box-text {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+            word-break: break-word;
+            min-height: 24px;
+        }
+
+        .isl-box.isl-output {
+            border-color: var(--accent-glow);
+            background: var(--accent-dim);
+        }
+
+        .isl-box.isl-output .isl-box-label {
+            color: var(--accent);
+            opacity: 0.8;
+        }
+
+        .isl-box.isl-output .isl-box-text {
+            color: var(--accent);
+        }
+
+        /* ─── Word chips ─── */
+        .word-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .chip {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 5px 11px;
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            transition: all var(--transition);
+        }
+
+        .chip.active {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .chip.missing {
+            opacity: 0.35;
+            text-decoration: line-through;
+        }
+
+        /* ─── Video player ─── */
+        .video-section {
+            display: none;
+        }
+
+        .video-section.visible {
+            display: block;
+        }
+
+        .video-wrapper {
+            background: #000;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            aspect-ratio: 16/9;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-wrapper video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .video-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.7);
+            color: var(--text-secondary);
+            font-size: 13.5px;
+            font-family: var(--font-mono);
+            gap: 10px;
+            transition: opacity var(--transition);
+        }
+
+        .video-overlay.hidden {
+            display: none;
+        }
+
+        .video-overlay-icon {
+            font-size: 28px;
+        }
+
+        .video-overlay-text {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .video-progress {
+            margin-top: 14px;
+        }
+
+        .video-progress-track {
+            height: 3px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .video-progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 300ms ease;
+            width: 0%;
+        }
+
+        .video-word-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .current-word-display {
+            font-size: 18px;
+            font-weight: 600;
+            font-family: var(--font-head);
+            color: var(--accent);
+            letter-spacing: 0.5px;
+        }
+
+        .fallback-display {
+            display: none;
+            background: var(--bg-input);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            font-size: 13.5px;
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            line-height: 1.8;
+        }
+
+        .fallback-display.visible {
+            display: block;
+        }
+
+        /* ─── Divider ─── */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
+            border: none;
+        }
+
+        /* ─── Footer ─── */
+        .footer {
+            text-align: center;
+            padding-top: 48px;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-family: var(--font-mono);
+            letter-spacing: 0.3px;
+        }
+
+        .footer span {
+            color: var(--accent);
+        }
+
+        /* ─── Spinner ─── */
+        .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--accent-glow);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ─── Animations ─── */
+        .fade-in {
+            animation: fadeIn 280ms ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 480px) {
+            .header {
+                padding: 24px 0 20px;
+            }
+
+            .logo {
+                font-size: 22px;
+            }
+
+            .card {
+                padding: 18px 16px;
+            }
+
+            .input-row {
+                flex-wrap: nowrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="shell">
+
+        <!-- ── HEADER ── -->
+        <header class="header">
+            <div class="header-text">
+                <div class="logo">
+                    <span class="logo-dot"></span>
+                    SilentBridge
+                </div>
+                <p class="tagline">Bridging speech and silence in real time</p>
+            </div>
+            <button class="theme-btn" id="themeToggle" aria-label="Toggle theme">
+                <!-- moon icon -->
+                <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+                <span id="themeLabel">Light mode</span>
+            </button>
+        </header>
+
+        <!-- ── PIPELINE INDICATOR ── -->
+        <div class="pipeline" id="pipeline" aria-label="Processing pipeline">
+            <div class="pipeline-step">
+                <div class="pipeline-icon" id="pipe-input">🎙</div>
+                <div class="pipeline-label">Input</div>
+            </div>
+            <div class="pipeline-arrow">›</div>
+            <div class="pipeline-step">
+                <div class="pipeline-icon" id="pipe-isl">🔄</div>
+                <div class="pipeline-label">ISL Convert</div>
+            </div>
+            <div class="pipeline-arrow">›</div>
+            <div class="pipeline-step">
+                <div class="pipeline-icon" id="pipe-video">▶</div>
+                <div class="pipeline-label">Sign Play</div>
+            </div>
+        </div>
+
+        <!-- ── INPUT CARD ── -->
+        <div class="card">
+            <div class="card-label"><span class="dot"></span>Input</div>
+            <div class="input-row">
+                <input type="text" class="text-input" id="textInput" placeholder="Type a sentence or press the mic…"
+                    autocomplete="off" spellcheck="false" autofocus />
+                <button class="btn-mic btn" id="micBtn" title="Start / stop microphone" aria-label="Microphone">
+                    <!-- mic icon -->
+                    <svg id="micIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                        <line x1="12" y1="19" x2="12" y2="23" />
+                        <line x1="8" y1="23" x2="16" y2="23" />
+                    </svg>
+                </button>
+                <button class="btn btn-primary" id="convertBtn">Convert</button>
+            </div>
+
+            <!-- Sample sentences -->
+            <div class="samples" role="group" aria-label="Sample sentences">
+                <button class="sample-btn" data-text="I need water">I need water</button>
+                <button class="sample-btn" data-text="I am going to hospital">I am going to hospital</button>
+                <button class="sample-btn" data-text="She is eating food">She is eating food</button>
+            </div>
+
+            <!-- Status line -->
+            <div class="status-bar" id="statusBar" role="status" aria-live="polite">
+                <div class="status-dot" id="statusDot"></div>
+                <span class="status-text" id="statusText">Ready</span>
+            </div>
+        </div>
+
+        <!-- ── RESULT PANEL ── -->
+        <div class="result-panel" id="resultPanel">
+
+            <!-- Original vs ISL -->
+            <div class="card fade-in">
+                <div class="card-label"><span class="dot"></span>Conversion</div>
+                <div class="isl-grid">
+                    <div class="isl-box">
+                        <div class="isl-box-label">Original text</div>
+                        <div class="isl-box-text" id="origText">—</div>
+                    </div>
+                    <div class="isl-box isl-output">
+                        <div class="isl-box-label">ISL sentence</div>
+                        <div class="isl-box-text" id="islText">—</div>
+                    </div>
+                </div>
+
+                <!-- Word chips -->
+                <div style="margin-top:16px;">
+                    <div class="isl-box-label"
+                        style="margin-bottom:8px; font-size:10px; letter-spacing:0.7px; text-transform:uppercase; color:var(--text-muted); font-family:var(--font-mono);">
+                        Signs to play</div>
+                    <div class="word-chips" id="wordChips"></div>
+                </div>
+            </div>
+
+            <!-- Video section -->
+            <div class="card video-section fade-in" id="videoSection">
+                <div class="card-label"><span class="dot"></span>Sign playback</div>
+
+                <div class="video-wrapper">
+                    <video id="mainVideo" playsinline></video>
+                    <div class="video-overlay" id="videoOverlay">
+                        <div class="video-overlay-icon">🤟</div>
+                        <div class="video-overlay-text">Signs will play here</div>
+                    </div>
+                </div>
+
+                <div class="video-progress">
+                    <div class="video-progress-track">
+                        <div class="video-progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="video-word-row">
+                        <div class="current-word-display" id="currentWordDisplay">—</div>
+                        <div id="wordCounter"
+                            style="font-size:11.5px; color:var(--text-muted); font-family:var(--font-mono);">0 / 0</div>
+                    </div>
+                </div>
+
+                <!-- Fallback for missing video files -->
+                <div class="fallback-display" id="fallbackDisplay"></div>
+            </div>
+
+        </div><!-- /result-panel -->
+
+        <footer class="footer">
+            <span>SilentBridge</span> — ISL Prototype v0.1 &nbsp;·&nbsp; Hackathon Demo
+        </footer>
+    </div><!-- /shell -->
+
+    <script>
+        // ═══════════════════════════════════════════════════════════
+        //  CONFIGURATION — word → video file mapping
+        //  Place video files in a "videos/" folder next to index.html
+        //  File names must be lowercase, e.g. videos/water.mp4
+        // ═══════════════════════════════════════════════════════════
+        const VIDEO_MAP = {
+            "i": "videos/i.mp4",
+            "you": "videos/you.mp4",
+            "she": "videos/she.mp4",
+            "he": "videos/he.mp4",
+            "we": "videos/we.mp4",
+            "they": "videos/they.mp4",
+            "need": "videos/need.mp4",
+            "water": "videos/water.mp4",
+            "food": "videos/food.mp4",
+            "going": "videos/going.mp4",
+            "hospital": "videos/hospital.mp4",
+            "eating": "videos/eating.mp4",
+            "help": "videos/help.mp4",
+            "pain": "videos/pain.mp4",
+            "doctor": "videos/doctor.mp4",
+            "home": "videos/home.mp4",
+            "yes": "videos/yes.mp4",
+            "no": "videos/no.mp4",
+            "please": "videos/please.mp4",
+            "thank": "videos/thank.mp4",
+        };
+
+        // ═══════════════════════════════════════════════════════════
+        //  ISL CONVERSION — rule-based English → ISL gloss
+        //  ISL grammar: Subject – Object – Verb  (SOV order)
+        //  Filler words are dropped. Articles/aux verbs removed.
+        // ═══════════════════════════════════════════════════════════
+        const FILLER_WORDS = new Set([
+            "am", "is", "are", "was", "were", "be", "been", "being",
+            "the", "a", "an",
+            "to", "of", "in", "on", "at", "by", "for", "with", "about",
+            "and", "but", "or", "so",
+            "i'm", "she's", "he's", "we're", "they're", "it's",
+        ]);
+
+        // Known subjects (first-person, pronouns)
+        const SUBJECTS = new Set(["i", "you", "she", "he", "we", "they", "it"]);
+
+        // Known verbs (approximate — extend as needed)
+        const VERBS = new Set([
+            "need", "want", "go", "going", "eat", "eating", "drink", "drinking",
+            "help", "come", "coming", "see", "take", "give", "like", "feel", "feel",
+            "have", "hurt", "know", "say", "ask", "tell",
+        ]);
+
+        function tokenize(sentence) {
+            return sentence
+                .toLowerCase()
+                .replace(/[^a-z\s']/g, "")
+                .split(/\s+/)
+                .filter(Boolean);
+        }
+
+        function expandContractions(tokens) {
+            const MAP = { "i'm": "i", "she's": "she", "he's": "he", "we're": "we", "they're": "they", "it's": "it", "i'll": "i", "you'll": "you" };
+            return tokens.map(t => MAP[t] || t);
+        }
+
+        function convertToISL(sentence) {
+            let tokens = tokenize(sentence);
+            tokens = expandContractions(tokens);
+
+            // Remove filler words
+            const meaningful = tokens.filter(t => !FILLER_WORDS.has(t));
+
+            if (meaningful.length === 0) return { gloss: [], note: "No meaningful words found." };
+
+            // Partition into subjects, objects, verbs
+            const subjects = [], objects = [], verbs = [];
+
+            for (const word of meaningful) {
+                if (SUBJECTS.has(word)) subjects.push(word);
+                else if (VERBS.has(word)) verbs.push(word);
+                else objects.push(word);
+            }
+
+            // SOV order: Subject → Object → Verb
+            const gloss = [...subjects, ...objects, ...verbs];
+
+            return { gloss, note: null };
+        }
+
+
+        // ═══════════════════════════════════════════════════════════
+        //  DOM REFERENCES
+        // ═══════════════════════════════════════════════════════════
+        const $ = id => document.getElementById(id);
+        const textInput = $("textInput");
+        const micBtn = $("micBtn");
+        const convertBtn = $("convertBtn");
+        const statusBar = $("statusBar");
+        const statusDot = $("statusDot");
+        const statusTxt = $("statusText");
+        const resultPanel = $("resultPanel");
+        const origTextEl = $("origText");
+        const islTextEl = $("islText");
+        const wordChipsEl = $("wordChips");
+        const videoSection = $("videoSection");
+        const mainVideo = $("mainVideo");
+        const videoOverlay = $("videoOverlay");
+        const progressFill = $("progressFill");
+        const currentWordEl = $("currentWordDisplay");
+        const wordCounterEl = $("wordCounter");
+        const fallbackDisplay = $("fallbackDisplay");
+        const themeToggle = $("themeToggle");
+        const themeIcon = $("themeIcon");
+        const themeLabel = $("themeLabel");
+
+        // Pipeline icons
+        const pipeInput = $("pipe-input");
+        const pipeIsl = $("pipe-isl");
+        const pipeVideo = $("pipe-video");
+
+
+        // ═══════════════════════════════════════════════════════════
+        //  THEME TOGGLE
+        // ═══════════════════════════════════════════════════════════
+        const SUN_PATH = `<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
+        const MOON_PATH = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
+
+        themeToggle.addEventListener("click", () => {
+            const isLight = document.documentElement.getAttribute("data-theme") === "light";
+            if (isLight) {
+                document.documentElement.setAttribute("data-theme", "dark");
+                themeIcon.innerHTML = MOON_PATH;
+                themeLabel.textContent = "Light mode";
+            } else {
+                document.documentElement.setAttribute("data-theme", "light");
+                themeIcon.innerHTML = SUN_PATH;
+                themeLabel.textContent = "Dark mode";
+            }
+        });
+
+
+        // ═══════════════════════════════════════════════════════════
+        //  STATUS HELPERS
+        // ═══════════════════════════════════════════════════════════
+        function setStatus(text, type = "normal") {
+            statusBar.classList.add("visible");
+            statusTxt.textContent = text;
+            statusTxt.className = "status-text" + (type === "error" ? " error" : "");
+            statusDot.className = "status-dot";
+            if (type === "loading") {
+                // Replace dot with spinner
+                statusDot.style.display = "none";
+                if (!$("statusSpinner")) {
+                    const sp = document.createElement("div");
+                    sp.id = "statusSpinner";
+                    sp.className = "spinner";
+                    statusBar.insertBefore(sp, statusTxt);
+                }
+            } else {
+                statusDot.style.display = "";
+                const sp = $("statusSpinner");
+                if (sp) sp.remove();
+                if (type === "blink") statusDot.classList.add("blink");
+                if (type === "error") statusDot.classList.add("error");
+            }
+        }
+
+        function clearStatus() {
+            statusBar.classList.remove("visible");
+        }
+
+        function setPipelineActive(stage) {
+            // stage: "input" | "isl" | "video" | null
+            pipeInput.classList.toggle("active", stage === "input" || stage === "isl" || stage === "video");
+            pipeIsl.classList.toggle("active", stage === "isl" || stage === "video");
+            pipeVideo.classList.toggle("active", stage === "video");
+        }
+
+
+        // ═══════════════════════════════════════════════════════════
+        //  SAMPLE SENTENCE BUTTONS
+        // ═══════════════════════════════════════════════════════════
+        document.querySelectorAll(".sample-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                textInput.value = btn.dataset.text;
+                textInput.focus();
+                handleConvert();
+            });
+        });
+
+
+        // ═══════════════════════════════════════════════════════════
+        //  ENTER KEY TO SUBMIT
+        // ═══════════════════════════════════════════════════════════
+        textInput.addEventListener("keydown", e => {
+            if (e.key === "Enter") handleConvert();
+        });
+
+        convertBtn.addEventListener("click", handleConvert);
+
+
+        // ═══════════════════════════════════════════════════════════
+        //  MAIN CONVERSION FLOW
+        // ═══════════════════════════════════════════════════════════
+        function handleConvert() {
+            const raw = textInput.value.trim();
+            if (!raw) {
+                setStatus("Please enter or speak a sentence first.", "error");
+                textInput.focus();
+                return;
+            }
+
+            // Step 1 — Show input active
+            setPipelineActive("input");
+            setStatus("Processing…", "loading");
+
+            // Simulate slight async feel (keeps UI from snapping)
+            setTimeout(() => {
+                setPipelineActive("isl");
+
+                const { gloss } = convertToISL(raw);
+
+                origTextEl.textContent = raw;
+                islTextEl.textContent = gloss.length ? gloss.join(" ").toUpperCase() : "—";
+
+                // Show result panel
+                resultPanel.classList.add("visible");
+
+                // Build word chips
+                buildChips(gloss);
+
+                if (gloss.length === 0) {
+                    setStatus("No signs to play — no mappable words found.", "error");
+                    setPipelineActive(null);
+                    return;
+                }
+
+                setStatus("Playing signs…", "blink");
+
+                setTimeout(() => {
+                    setPipelineActive("video");
+                    videoSection.classList.add("visible");
+                    playSequence(gloss);
+                }, 400);
+
+            }, 350);
+        }
+
+
+        // ═══════════════════════════════════════════════════════════
+        //  WORD CHIPS
+        // ═══════════════════════════════════════════════════════════
+        function buildChips(words) {
+            wordChipsEl.innerHTML = "";
+            words.forEach(w => {
+                const chip = document.createElement("span");
+                chip.className = "chip";
+                chip.textContent = w;
+                chip.id = "chip-" + w;
+                if (!VIDEO_MAP[w]) chip.classList.add("missing");
+                wordChipsEl.appendChild(chip);
+            });
+        }
+
+        function setChipActive(word) {
+            document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+            const chip = $("chip-" + word);
+            if (chip) chip.classList.add("active");
+        }
+
+
+        // ═══════════════════════════════════════════════════════════
+        //  VIDEO SEQUENCE PLAYER
+        // ═══════════════════════════════════════════════════════════
+        let playQueue = [];
+        let playIndex = 0;
+        let missingWords = [];
+
+        function playSequence(words) {
+            playQueue = words.filter(w => VIDEO_MAP[w]);
+            missingWords = words.filter(w => !VIDEO_MAP[w]);
+            playIndex = 0;
+
+            updateFallback(missingWords);
+
+            if (playQueue.length === 0) {
+                videoOverlay.classList.remove("hidden");
+                videoOverlay.innerHTML = `<div class="video-overlay-icon">🤟</div><div class="video-overlay-text">No video files found — see fallback below</div>`;
+                setStatus("No matching video files. Add .mp4 files to the videos/ folder.", "error");
+                setPipelineActive(null);
+                return;
+            }
+
+            playNextWord();
+        }
+
+        function playNextWord() {
+            if (playIndex >= playQueue.length) {
+                // Done
+                onSequenceEnd();
+                return;
+            }
+
+            const word = playQueue[playIndex];
+            const src = VIDEO_MAP[word];
+
+            // Update UI
+            setChipActive(word);
+            currentWordEl.textContent = word.toUpperCase();
+            const pct = Math.round(((playIndex) / playQueue.length) * 100);
+            progressFill.style.width = pct + "%";
+            wordCounterEl.textContent = (playIndex + 1) + " / " + playQueue.length;
+
+            // Load & play
+            mainVideo.src = src;
+            mainVideo.load();
+
+            const tryPlay = () => {
+                videoOverlay.classList.add("hidden");
+                mainVideo.play().catch(() => {
+                    // autoplay blocked or file missing — skip
+                    console.warn("Could not play:", src);
+                    playIndex++;
+                    playNextWord();
+                });
+            };
+
+            mainVideo.oncanplay = tryPlay;
+
+            // Fallback: if file 404s or takes too long, skip after 1.2s
+            const fallbackTimer = setTimeout(() => {
+                console.warn("Skipping (timeout):", word);
+                mainVideo.oncanplay = null;
+                playIndex++;
+                playNextWord();
+            }, 1200);
+
+            mainVideo.onended = () => {
+                clearTimeout(fallbackTimer);
+                mainVideo.oncanplay = null;
+                playIndex++;
+                playNextWord();
+            };
+
+            mainVideo.onerror = () => {
+                clearTimeout(fallbackTimer);
+                mainVideo.oncanplay = null;
+                console.warn("File not found:", src);
+                playIndex++;
+                playNextWord();
+            };
+        }
+
+        function onSequenceEnd() {
+            progressFill.style.width = "100%";
+            currentWordEl.textContent = "Done";
+            wordCounterEl.textContent = playQueue.length + " / " + playQueue.length;
+            setStatus("All signs played ✓", "normal");
+            setPipelineActive(null);
+
+            // Show overlay again after short pause
+            setTimeout(() => {
+                videoOverlay.classList.remove("hidden");
+                videoOverlay.innerHTML = `<div class="video-overlay-icon">✓</div><div class="video-overlay-text">Sequence complete</div>`;
+            }, 800);
+        }
+
+        function updateFallback(missing) {
+            if (missing.length === 0) {
+                fallbackDisplay.classList.remove("visible");
+                return;
+            }
+            fallbackDisplay.classList.add("visible");
+            fallbackDisplay.innerHTML = `
+    <strong style="color:var(--text-secondary)">No video for:</strong>
+    ${missing.map(w => `<span style="color:var(--accent);margin-left:8px;">${w}</span>`).join("")}
+    <br><span style="font-size:11.5px;color:var(--text-muted)">Add these .mp4 files to the videos/ folder to enable full playback.</span>
+  `;
+        }
+
+
+        // ═══════════════════════════════════════════════════════════
+        //  WEB SPEECH API — MICROPHONE
+        // ═══════════════════════════════════════════════════════════
+        let recognition = null;
+        let isListening = false;
+
+        function setupSpeech() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                micBtn.disabled = true;
+                micBtn.title = "Speech recognition not supported in this browser";
+                micBtn.style.opacity = "0.35";
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.lang = "en-IN"; // Indian English
+            recognition.continuous = false;
+            recognition.interimResults = true;
+
+            recognition.onstart = () => {
+                isListening = true;
+                micBtn.classList.add("listening");
+                // Switch to stop icon
+                micBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>`;
+                setStatus("Listening…", "blink");
+                setPipelineActive("input");
+            };
+
+            recognition.onresult = (event) => {
+                let interim = "";
+                let final = "";
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const t = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) final += t;
+                    else interim += t;
+                }
+                textInput.value = (final || interim).trim();
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                micBtn.classList.remove("listening");
+                micBtn.innerHTML = MIC_SVG;
+                if (textInput.value.trim()) {
+                    setStatus("Processing…", "loading");
+                    setTimeout(handleConvert, 200);
+                } else {
+                    clearStatus();
+                    setPipelineActive(null);
+                }
+            };
+
+            recognition.onerror = (e) => {
+                isListening = false;
+                micBtn.classList.remove("listening");
+                micBtn.innerHTML = MIC_SVG;
+                if (e.error === "not-allowed") {
+                    setStatus("Microphone permission denied. Please allow access.", "error");
+                } else if (e.error === "no-speech") {
+                    setStatus("No speech detected. Try again.", "error");
+                } else {
+                    setStatus("Mic error: " + e.error, "error");
+                }
+                setPipelineActive(null);
+            };
+        }
+
+        const MIC_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`;
+
+        micBtn.innerHTML = MIC_SVG;
+
+        micBtn.addEventListener("click", () => {
+            if (!recognition) {
+                setStatus("Speech recognition is not supported in this browser.", "error");
+                return;
+            }
+            if (isListening) {
+                recognition.stop();
+            } else {
+                textInput.value = "";
+                resultPanel.classList.remove("visible");
+                videoSection.classList.remove("visible");
+                clearStatus();
+                try {
+                    recognition.start();
+                } catch (err) {
+                    setStatus("Could not start mic. Try again.", "error");
+                }
+            }
+        });
+
+        setupSpeech();
+    </script>
+</body>
+
+</html>
